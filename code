@@ -1,0 +1,32 @@
+pipeline {
+    agent any
+    stages {
+        stage('Build') {
+            steps {
+                script {
+                    docker.build('node-app')
+                }
+            }
+        }
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    withSonarQubeEnv('My SonarQube') {
+                        sh 'npm install'
+                        sh 'npm run test'
+                        sh 'sonar-scanner'
+                    }
+                }
+            }
+        }
+        stage('Deploy') {
+            steps {
+                script {
+                    docker.withRegistry('', 'my-docker-credentials') {
+                        docker.image('node-app').push()
+                    }
+                }
+            }
+        }
+    }
+}
